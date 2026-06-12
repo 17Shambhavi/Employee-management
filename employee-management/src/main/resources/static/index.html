@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Employee Management System</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; background: #f0f2f5; }
+        .navbar { background: #2c3e50; color: white; padding: 15px 30px; font-size: 20px; font-weight: bold; display: flex; justify-content: space-between; }
+        .container { max-width: 1000px; margin: 30px auto; padding: 20px; }
+        .card { background: white; border-radius: 10px; padding: 25px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        h2 { color: #2c3e50; margin-bottom: 15px; }
+        input, select { width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #ddd; border-radius: 5px; font-size: 14px; }
+        button { background: #2c3e50; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-size: 14px; margin: 5px; }
+        button:hover { background: #34495e; }
+        .btn-red { background: #e74c3c; }
+        .btn-green { background: #27ae60; }
+        .btn-blue { background: #2980b9; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th { background: #2c3e50; color: white; padding: 12px; text-align: left; }
+        td { padding: 10px; border-bottom: 1px solid #ddd; }
+        tr:hover { background: #f5f5f5; }
+        .msg { padding: 10px; border-radius: 5px; margin: 10px 0; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .tab-btn { background: #95a5a6; }
+        .tab-btn.active { background: #2c3e50; }
+        .profile-info p { padding: 8px 0; border-bottom: 1px solid #eee; font-size: 15px; }
+        .profile-info span { font-weight: bold; color: #2c3e50; }
+        .divider { border-top: 2px dashed #ddd; margin: 15px 0; }
+    </style>
+</head>
+<body>
+
+<div class="navbar">
+    🏢 Employee Management System
+    <span id="navUser"></span>
+</div>
+
+<div class="container">
+
+    <!-- LOGIN -->
+    <div id="loginSection" class="card">
+        <h2>🔐 Login</h2>
+        <input type="text" id="username" placeholder="Username">
+        <input type="password" id="password" placeholder="Password">
+        <button onclick="login()">Login</button>
+        <div id="loginMsg"></div>
+    </div>
+
+    <!-- ADMIN SECTION -->
+    <div id="adminSection" style="display:none">
+        <div class="card">
+            <h2>➕ Add Employee</h2>
+            <input type="text" id="name" placeholder="Name">
+            <input type="text" id="department" placeholder="Department">
+            <input type="text" id="designation" placeholder="Designation">
+            <input type="email" id="email" placeholder="Email">
+            <input type="text" id="mobile" placeholder="Mobile Number">
+            <input type="number" id="salary" placeholder="Salary">
+            <input type="date" id="joiningDate">
+            <div class="divider"></div>
+            <p style="color:#2c3e50; font-weight:bold; margin-bottom:5px">🔑 Login Credentials</p>
+            <input type="text" id="newUsername" placeholder="Username (for employee login)">
+            <input type="password" id="newPassword" placeholder="Password (for employee login)">
+            <button class="btn-green" onclick="addEmployee()">Add Employee</button>
+            <div id="addMsg"></div>
+        </div>
+
+        <div class="card">
+            <h2>👥 All Employees</h2>
+            <button onclick="loadEmployees()">🔄 Refresh</button>
+            <table>
+                <thead><tr><th>ID</th><th>Name</th><th>Department</th><th>Designation</th><th>Email</th><th>Mobile</th><th>Salary</th><th>Action</th></tr></thead>
+                <tbody id="empBody"></tbody>
+            </table>
+        </div>
+
+        <div class="card">
+            <h2>🔍 Search by Department</h2>
+            <input type="text" id="deptSearch" placeholder="Enter Department">
+            <button onclick="searchByDept()">Search</button>
+            <table>
+                <thead><tr><th>ID</th><th>Name</th><th>Department</th><th>Salary</th></tr></thead>
+                <tbody id="deptBody"></tbody>
+            </table>
+        </div>
+
+        <div class="card">
+            <h2>💰 Salary Filter</h2>
+            <input type="number" id="salaryFilter" placeholder="Greater than salary">
+            <button onclick="filterBySalary()">Filter</button>
+            <table>
+                <thead><tr><th>ID</th><th>Name</th><th>Salary</th></tr></thead>
+                <tbody id="salaryBody"></tbody>
+            </table>
+        </div>
+
+        <button class="btn-red" onclick="logout()">🚪 Logout</button>
+    </div>
+
+    <!-- EMPLOYEE SECTION -->
+    <div id="employeeSection" style="display:none">
+        <div class="card">
+            <button class="tab-btn active" onclick="showTab('profile')">👤 Profile</button>
+            <button class="tab-btn" onclick="showTab('salary')">💰 Salary</button>
+            <button class="tab-btn" onclick="showTab('attendance')">📅 Attendance</button>
+            <button class="tab-btn" onclick="showTab('leave')">🏖️ Leave</button>
+        </div>
+
+        <div id="tab-profile" class="card">
+            <h2>👤 My Profile</h2>
+            <div id="profileData" class="profile-info"></div>
+        </div>
+
+        <div id="tab-salary" class="card" style="display:none">
+            <h2>💰 My Salary</h2>
+            <div id="salaryData" class="profile-info"></div>
+        </div>
+
+        <div id="tab-attendance" class="card" style="display:none">
+            <h2>📅 Mark Attendance</h2>
+            <select id="attendanceStatus">
+                <option value="PRESENT">Present</option>
+                <option value="ABSENT">Absent</option>
+                <option value="HALF_DAY">Half Day</option>
+            </select>
+            <button class="btn-green" onclick="markAttendance()">Mark Today</button>
+            <div id="attendanceMsg"></div>
+            <h2 style="margin-top:20px">📋 My Attendance</h2>
+            <button onclick="loadAttendance()">🔄 Refresh</button>
+            <table>
+                <thead><tr><th>Date</th><th>Status</th></tr></thead>
+                <tbody id="attendanceBody"></tbody>
+            </table>
+        </div>
+
+        <div id="tab-leave" class="card" style="display:none">
+            <h2>🏖️ Apply Leave</h2>
+            <input type="date" id="fromDate">
+            <input type="date" id="toDate">
+            <input type="text" id="reason" placeholder="Reason">
+            <button class="btn-blue" onclick="applyLeave()">Apply</button>
+            <div id="leaveMsg"></div>
+            <h2 style="margin-top:20px">📋 My Leaves</h2>
+            <button onclick="loadLeaves()">🔄 Refresh</button>
+            <table>
+                <thead><tr><th>From</th><th>To</th><th>Reason</th><th>Status</th></tr></thead>
+                <tbody id="leaveBody"></tbody>
+            </table>
+        </div>
+
+        <button class="btn-red" onclick="logout()">🚪 Logout</button>
+    </div>
+</div>
+
+<script>
+    let token = '';
+    let employeeId = '';
+    let role = '';
+
+    async function login() {
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
+        try {
+            const res = await fetch('/api/auth/login', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({username, password})
+            });
+            const data = await res.json();
+            if (data.token) {
+                token = data.token;
+                role = data.role;
+                document.getElementById('loginSection').style.display = 'none';
+                if (role === 'ADMIN') {
+                    document.getElementById('adminSection').style.display = 'block';
+                    document.getElementById('navUser').innerText = '👑 Admin';
+                    loadEmployees();
+                } else {
+                    employeeId = data.employeeId;
+                    document.getElementById('employeeSection').style.display = 'block';
+                    document.getElementById('navUser').innerText = '👤 Employee';
+                    loadProfile();
+                }
+            } else {
+                document.getElementById('loginMsg').innerHTML = '<div class="msg error">❌ Wrong credentials!</div>';
+            }
+        } catch(e) {
+            document.getElementById('loginMsg').innerHTML = '<div class="msg error">❌ Server error!</div>';
+        }
+    }
+
+    async function addEmployee() {
+        const emp = {
+            name: document.getElementById('name').value,
+            department: document.getElementById('department').value,
+            designation: document.getElementById('designation').value,
+            email: document.getElementById('email').value,
+            mobileNumber: document.getElementById('mobile').value,
+            salary: document.getElementById('salary').value,
+            joiningDate: document.getElementById('joiningDate').value
+        };
+
+        const res = await fetch('/api/employees', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token},
+            body: JSON.stringify(emp)
+        });
+
+        if (res.ok) {
+            const savedEmp = await res.json();
+
+            // Auto register karo
+            const username = document.getElementById('newUsername').value;
+            const password = document.getElementById('newPassword').value;
+
+            if(username && password) {
+                await fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        username: username,
+                        password: password,
+                        employeeId: String(savedEmp.id)
+                    })
+                });
+            }
+
+            document.getElementById('addMsg').innerHTML = '<div class="msg success">✅ Employee Added & Registered!</div>';
+            loadEmployees();
+        } else {
+            document.getElementById('addMsg').innerHTML = '<div class="msg error">❌ Error adding employee!</div>';
+        }
+    }
+
+    function showTab(tab) {
+        ['profile','salary','attendance','leave'].forEach(t => {
+            document.getElementById('tab-'+t).style.display = t === tab ? 'block' : 'none';
+        });
+        if(tab === 'salary') loadSalary();
+        if(tab === 'attendance') loadAttendance();
+        if(tab === 'leave') loadLeaves();
+    }
+
+    async function loadProfile() {
+        const res = await fetch('/api/employee/profile/' + employeeId);
+        const data = await res.json();
+        document.getElementById('profileData').innerHTML = `
+            <p>🆔 ID: <span>${data.id}</span></p>
+            <p>👤 Name: <span>${data.name}</span></p>
+            <p>🏢 Department: <span>${data.department}</span></p>
+            <p>💼 Designation: <span>${data.designation}</span></p>
+            <p>📧 Email: <span>${data.email}</span></p>
+            <p>📱 Mobile: <span>${data.mobileNumber}</span></p>
+            <p>📅 Joining Date: <span>${data.joiningDate}</span></p>
+        `;
+    }
+
+    async function loadSalary() {
+        const res = await fetch('/api/employee/salary/' + employeeId);
+        const data = await res.json();
+        document.getElementById('salaryData').innerHTML = `
+            <p>👤 Name: <span>${data.name}</span></p>
+            <p>💰 Salary: <span>₹${data.salary}</span></p>
+        `;
+    }
+
+    async function markAttendance() {
+        const status = document.getElementById('attendanceStatus').value;
+        const res = await fetch('/api/employee/attendance', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({employeeId: employeeId, status: status})
+        });
+        if(res.ok) {
+            document.getElementById('attendanceMsg').innerHTML = '<div class="msg success">✅ Attendance marked!</div>';
+            loadAttendance();
+        }
+    }
+
+    async function loadAttendance() {
+        const res = await fetch('/api/employee/attendance/' + employeeId);
+        const data = await res.json();
+        let html = '';
+        data.forEach(a => {
+            html += `<tr><td>${a.date}</td><td>${a.status}</td></tr>`;
+        });
+        document.getElementById('attendanceBody').innerHTML = html;
+    }
+
+    async function applyLeave() {
+        const body = {
+            employeeId: employeeId,
+            fromDate: document.getElementById('fromDate').value,
+            toDate: document.getElementById('toDate').value,
+            reason: document.getElementById('reason').value
+        };
+        const res = await fetch('/api/employee/leave', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(body)
+        });
+        if(res.ok) {
+            document.getElementById('leaveMsg').innerHTML = '<div class="msg success">✅ Leave applied!</div>';
+            loadLeaves();
+        }
+    }
+
+    async function loadLeaves() {
+        const res = await fetch('/api/employee/leave/' + employeeId);
+        const data = await res.json();
+        let html = '';
+        data.forEach(l => {
+            html += `<tr><td>${l.fromDate}</td><td>${l.toDate}</td><td>${l.reason}</td><td>${l.status}</td></tr>`;
+        });
+        document.getElementById('leaveBody').innerHTML = html;
+    }
+
+    async function loadEmployees() {
+        const res = await fetch('/api/employees', {
+            headers: {'Authorization': 'Bearer ' + token}
+        });
+        const data = await res.json();
+        let html = '';
+        data.forEach(emp => {
+            html += `<tr><td>${emp.id}</td><td>${emp.name}</td><td>${emp.department}</td>
+            <td>${emp.designation}</td><td>${emp.email}</td><td>${emp.mobileNumber}</td>
+            <td>₹${emp.salary}</td>
+            <td><button class="btn-red" onclick="deleteEmployee(${emp.id})">Delete</button></td></tr>`;
+        });
+        document.getElementById('empBody').innerHTML = html;
+    }
+
+    async function deleteEmployee(id) {
+        await fetch('/api/employees/' + id, {
+            method: 'DELETE',
+            headers: {'Authorization': 'Bearer ' + token}
+        });
+        loadEmployees();
+    }
+
+    async function searchByDept() {
+        const dept = document.getElementById('deptSearch').value;
+        const res = await fetch('/api/employees/department/' + dept, {
+            headers: {'Authorization': 'Bearer ' + token}
+        });
+        const data = await res.json();
+        let html = '';
+        data.forEach(emp => {
+            html += `<tr><td>${emp.id}</td><td>${emp.name}</td><td>${emp.department}</td><td>₹${emp.salary}</td></tr>`;
+        });
+        document.getElementById('deptBody').innerHTML = html;
+    }
+
+    async function filterBySalary() {
+        const salary = document.getElementById('salaryFilter').value;
+        const res = await fetch('/api/employees/salary/' + salary, {
+            headers: {'Authorization': 'Bearer ' + token}
+        });
+        const data = await res.json();
+        let html = '';
+        data.forEach(emp => {
+            html += `<tr><td>${emp.id}</td><td>${emp.name}</td><td>₹${emp.salary}</td></tr>`;
+        });
+        document.getElementById('salaryBody').innerHTML = html;
+    }
+
+    function logout() {
+        token = '';
+        employeeId = '';
+        role = '';
+        document.getElementById('loginSection').style.display = 'block';
+        document.getElementById('adminSection').style.display = 'none';
+        document.getElementById('employeeSection').style.display = 'none';
+    }
+</script>
+</body>
+</html>
