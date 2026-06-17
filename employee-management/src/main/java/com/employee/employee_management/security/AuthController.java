@@ -22,6 +22,7 @@ public class AuthController {
     private final String ADMIN_USERNAME = "admin";
     private final String ADMIN_PASSWORD = "143006";
 
+    // Login
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody Map<String, String> request) {
         String username = request.get("username");
@@ -48,6 +49,7 @@ public class AuthController {
         return ResponseEntity.status(401).body("Invalid credentials!");
     }
 
+    // Register
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody Map<String, String> request) {
         String username = request.get("username");
@@ -55,5 +57,19 @@ public class AuthController {
         Long employeeId = Long.parseLong(request.get("employeeId"));
         userService.registerUser(username, password, employeeId);
         return ResponseEntity.ok("Employee registered successfully!");
+    }
+
+    // Change Password
+    @PostMapping("/change-password")
+    public ResponseEntity<?> changePassword(@RequestBody Map<String, String> request) {
+        String username = request.get("username");
+        String oldPassword = request.get("oldPassword");
+        String newPassword = request.get("newPassword");
+
+        if (userService.validateUser(username, oldPassword)) {
+            userService.changePassword(username, newPassword);
+            return ResponseEntity.ok("Password changed!");
+        }
+        return ResponseEntity.status(400).body("Wrong current password!");
     }
 }

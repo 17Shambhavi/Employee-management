@@ -1,5 +1,4 @@
 package com.employee.employee_management.model;
-
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -21,7 +20,7 @@ public class User {
 
     private String password;
 
-    private String role; // ADMIN or EMPLOYEE
+    private String role;
 
-    private Long employeeId; // linked to employee
+    private Long employeeId;
 }

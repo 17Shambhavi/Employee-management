@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -28,17 +29,15 @@ public class EmployeeController {
     @Autowired
     private LeaveRequestRepository leaveRequestRepository;
 
-    // Profile dekhna
+    // Profile
     @GetMapping("/profile/{employeeId}")
     public ResponseEntity<?> getProfile(@PathVariable Long employeeId) {
         Optional<Employee> employee = employeeRepository.findById(employeeId);
-        if (employee.isPresent()) {
-            return ResponseEntity.ok(employee.get());
-        }
+        if (employee.isPresent()) return ResponseEntity.ok(employee.get());
         return ResponseEntity.status(404).body("Employee not found!");
     }
 
-    // Salary dekhna
+    // Salary
     @GetMapping("/salary/{employeeId}")
     public ResponseEntity<?> getSalary(@PathVariable Long employeeId) {
         Optional<Employee> employee = employeeRepository.findById(employeeId);
@@ -51,25 +50,55 @@ public class EmployeeController {
         return ResponseEntity.status(404).body("Employee not found!");
     }
 
-    // Attendance mark karna
-    @PostMapping("/attendance")
-    public ResponseEntity<?> markAttendance(@RequestBody Map<String, String> request) {
+    // Punch In
+    @PostMapping("/attendance/punchin")
+    public ResponseEntity<?> punchIn(@RequestBody Map<String, String> request) {
+        Long empId = Long.parseLong(request.get("employeeId"));
+        LocalDate today = LocalDate.now();
+
+        Optional<Attendance> existing = attendanceRepository
+                .findByEmployeeIdAndDate(empId, today);
+
+        if (existing.isPresent()) {
+            return ResponseEntity.status(400).body("Already punched in today!");
+        }
+
         Attendance attendance = new Attendance();
-        attendance.setEmployeeId(Long.parseLong(request.get("employeeId")));
-        attendance.setDate(LocalDate.now());
-        attendance.setStatus(request.get("status"));
+        attendance.setEmployeeId(empId);
+        attendance.setDate(today);
+        attendance.setPunchIn(LocalTime.now());
+        attendance.setStatus("PRESENT");
         attendanceRepository.save(attendance);
-        return ResponseEntity.ok("Attendance marked successfully!");
+        return ResponseEntity.ok("Punch In recorded!");
     }
 
-    // Apni attendance dekhna
+    // Punch Out
+    @PutMapping("/attendance/punchout")
+    public ResponseEntity<?> punchOut(@RequestBody Map<String, String> request) {
+        Long empId = Long.parseLong(request.get("employeeId"));
+        LocalDate today = LocalDate.now();
+
+        Optional<Attendance> existing = attendanceRepository
+                .findByEmployeeIdAndDate(empId, today);
+
+        if (existing.isEmpty()) {
+            return ResponseEntity.status(400).body("Punch in first!");
+        }
+
+        Attendance attendance = existing.get();
+        attendance.setPunchOut(LocalTime.now());
+        attendanceRepository.save(attendance);
+        return ResponseEntity.ok("Punch Out recorded!");
+    }
+
+    // Get Attendance
     @GetMapping("/attendance/{employeeId}")
     public ResponseEntity<?> getAttendance(@PathVariable Long employeeId) {
         List<Attendance> list = attendanceRepository.findByEmployeeId(employeeId);
         return ResponseEntity.ok(list);
     }
 
-    // Leave request dalna
+    // Apply Leave
     @PostMapping("/leave")
     public ResponseEntity<?> applyLeave(@RequestBody Map<String, String> request) {
         LeaveRequest leave = new LeaveRequest();
@@ -82,7 +111,7 @@ public class EmployeeController {
         return ResponseEntity.ok("Leave request submitted!");
     }
 
-    // Apni leaves dekhna
+    // Get Leaves
     @GetMapping("/leave/{employeeId}")
     public ResponseEntity<?> getLeaves(@PathVariable Long employeeId) {
         List<LeaveRequest> list = leaveRequestRepository.findByEmployeeId(employeeId);
