@@ -1,8 +1,11 @@
 package com.employee.employee_management.controller;
 
 import com.employee.employee_management.model.Employee;
+import com.employee.employee_management.model.User;
+import com.employee.employee_management.security.UserService;
 import com.employee.employee_management.service.EmployeeService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
@@ -15,30 +18,39 @@ public class HrController {
 
     private final EmployeeService employeeService;
 
-    // Sab employees dekho
+    @Autowired
+    private UserService userService;
+
     @GetMapping("/employees")
-    public ResponseEntity<List<Employee>>
-    getAllEmployees() {
+    public ResponseEntity<List<Employee>> getAllEmployees() {
         return ResponseEntity.ok(
                 employeeService.getAllEmployees());
     }
 
-    // Ek employee dekho
     @GetMapping("/employees/{id}")
-    public ResponseEntity<Employee>
-    getEmployee(
+    public ResponseEntity<Employee> getEmployee(
             @PathVariable Long id) {
         return ResponseEntity.ok(
                 employeeService.getEmployeeById(id));
     }
 
-    // Employee update karo
     @PutMapping("/employees/{id}")
-    public ResponseEntity<Employee>
-    updateEmployee(
+    public ResponseEntity<Employee> updateEmployee(
             @PathVariable Long id,
             @RequestBody Employee emp) {
         return ResponseEntity.ok(
                 employeeService.updateEmployee(id, emp));
+    }
+
+    @PostMapping("/create-hr")
+    public ResponseEntity<String> createHr(
+            @RequestBody User user) {
+        userService.registerUser(
+                user.getUsername(),
+                user.getPassword(),
+                user.getEmployeeId(),
+                "HR"
+        );
+        return ResponseEntity.ok("HR user created!");
     }
 }
