@@ -28,6 +28,7 @@ public class AuthController {
         String username = request.get("username");
         String password = request.get("password");
 
+        // Admin check
         if (ADMIN_USERNAME.equals(username) && ADMIN_PASSWORD.equals(password)) {
             String token = jwtUtil.generateToken(username + ":ADMIN");
             Map<String, String> response = new HashMap<>();
@@ -36,27 +37,46 @@ public class AuthController {
             return ResponseEntity.ok(response);
         }
 
+        // HR check
+        Optional<User> hrUser = userService.findByUsername(username);
+        if (hrUser.isPresent() &&
+                hrUser.get().getRole() == User.Role.HR &&
+                userService.validateUser(username, password)) {
+            String token = jwtUtil.generateToken(username + ":HR");
+            Map<String, String> response = new HashMap<>();
+            response.put("token", token);
+            response.put("role", "HR");
+            return ResponseEntity.ok(response);
+        }
+
+        // Employee check
         if (userService.validateUser(username, password)) {
             Optional<User> user = userService.findByUsername(username);
-            String token = jwtUtil.generateToken(username + ":EMPLOYEE:" + user.get().getEmployeeId());
+            String token = jwtUtil.generateToken(
+                    username + ":EMPLOYEE:" + user.get().getEmployeeId());
             Map<String, String> response = new HashMap<>();
             response.put("token", token);
             response.put("role", "EMPLOYEE");
-            response.put("employeeId", String.valueOf(user.get().getEmployeeId()));
+            response.put("employeeId",
+                    String.valueOf(user.get().getEmployeeId()));
             return ResponseEntity.ok(response);
         }
 
         return ResponseEntity.status(401).body("Invalid credentials!");
     }
 
-    // Register
+    // Register (Admin ya HR banane ke liye)
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody Map<String, String> request) {
         String username = request.get("username");
         String password = request.get("password");
-        Long employeeId = Long.parseLong(request.get("employeeId"));
-        userService.registerUser(username, password, employeeId);
-        return ResponseEntity.ok("Employee registered successfully!");
+        String role = request.getOrDefault("role", "EMPLOYEE");
+        Long employeeId = null;
+        if (request.get("employeeId") != null) {
+            employeeId = Long.parseLong(request.get("employeeId"));
+        }
+        userService.registerUser(username, password, employeeId, role);
+        return ResponseEntity.ok("User registered successfully!");
     }
 
     // Change Password

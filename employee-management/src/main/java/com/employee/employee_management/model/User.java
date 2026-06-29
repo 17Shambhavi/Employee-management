@@ -1,8 +1,9 @@
 package com.employee.employee_management.model;
+
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
 
 @Data
 @NoArgsConstructor
@@ -20,7 +21,12 @@ public class User {
 
     private String password;
 
-    private String role;
+    @Enumerated(EnumType.STRING)
+    private Role role;
 
     private Long employeeId;
+
+    public enum Role {
+        ADMIN, HR, EMPLOYEE
+    }
 }
